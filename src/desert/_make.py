@@ -305,10 +305,17 @@ def field_for_schema(
         field = field_for_schema(newtype_supertype, default=default)
 
     # enumerations
-    if type(typ) is enum.EnumMeta:
+    elif type(typ) is enum.EnumMeta:
         import marshmallow_enum
 
         field = marshmallow_enum.EnumField(typ, metadata=metadata)
+
+    # TypedDict
+    elif _is_typeddict(typ):
+        field = marshmallow.fields.Dict(
+            keys=marshmallow.fields.String,
+            values=marshmallow.fields.Raw,
+        )
 
     # Nested dataclasses
     forward_reference = getattr(typ, "__forward_arg__", None)
@@ -368,6 +375,17 @@ def _get_field_default(
         return field.default
     else:
         raise TypeError(field)
+
+
+def _is_typeddict(typ: t.Any) -> bool:
+    # python>=3.10: use t.is_typeddict
+    if hasattr(t, "is_typeddict"):
+        return t.cast(bool, t.is_typeddict(typ))  # type: ignore[attr-defined]
+    # python>=3.8; <3.10: Reimplement t.is_typeddict
+    if hasattr(t, "_TypedDictMeta"):
+        return isinstance(typ, t._TypedDictMeta)  # type: ignore[attr-defined]
+    # python<=3.7; No TypedDict in typing!
+    return False
 
 
 @attr.frozen

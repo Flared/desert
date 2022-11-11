@@ -45,6 +45,14 @@ def dataclass_param(request: _pytest.fixtures.SubRequest) -> DataclassModule:
     return module
 
 
+@pytest.fixture
+def typeddict() -> None:
+    try:
+        from typing import TypedDict
+    except ImportError:
+        raise pytest.skip("No TypedDict support")
+
+
 class AssertLoadDumpProtocol(typing_extensions.Protocol):
     def __call__(
         self, schema: marshmallow.Schema, loaded: t.Any, dumped: t.Dict[t.Any, t.Any]
@@ -433,6 +441,27 @@ def test_newtype(
     schema = desert.schema_class(A)()
     dumped = {"x": 1}
     loaded = A(x=1)  # type: ignore[call-arg]
+
+    assert_dump_load(schema=schema, loaded=loaded, dumped=dumped)
+
+
+def test_typeddict(
+    module: DataclassModule,
+    assert_dump_load: AssertLoadDumpProtocol,
+    typeddict: None,
+) -> None:
+    """Test dataclasses with basic TypedDict support"""
+
+    class B(t.TypedDict):
+        x: int
+
+    @module.dataclass
+    class A:
+        x: B
+
+    schema = desert.schema_class(A)()
+    dumped = {"x": {"x": 1}}
+    loaded = A(x={"x": 1})  # type: ignore[call-arg]
 
     assert_dump_load(schema=schema, loaded=loaded, dumped=dumped)
 
