@@ -302,7 +302,7 @@ def field_for_schema(
             subfields = [field_for_schema(subtyp) for subtyp in arguments]
             import marshmallow_union
 
-            field = marshmallow_union.Union(subfields)
+            field = marshmallow_union.Union(subfields, **field_args)
 
     # t.NewType returns a function with a __supertype__ attribute
     newtype_supertype = getattr(typ, "__supertype__", None)
@@ -314,7 +314,7 @@ def field_for_schema(
     elif type(typ) is enum.EnumMeta:
         import marshmallow_enum
 
-        field = marshmallow_enum.EnumField(typ, metadata=metadata)
+        field = marshmallow_enum.EnumField(typ, metadata=metadata, **field_args)
 
     # TypedDict
     elif _is_typeddict(typ):
