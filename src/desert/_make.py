@@ -321,6 +321,7 @@ def field_for_schema(
         field = marshmallow.fields.Dict(
             keys=marshmallow.fields.String,
             values=marshmallow.fields.Raw,
+            **field_args,
         )
 
     # Nested dataclasses
